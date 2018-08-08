@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">GridLayout</string>
+    <string name="buttonDim">46dp</string>
+    <string name="buttonText">""</string>
+</resources>
