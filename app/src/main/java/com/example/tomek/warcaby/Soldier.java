@@ -1,6 +1,11 @@
 package com.example.tomek.warcaby;
 
+import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static java.lang.StrictMath.abs;
 
@@ -31,8 +36,9 @@ public class Soldier implements Figures {
     public void drawSoldier(final Button btn_tmp) {
         if (this.isWhite)
             btn_tmp.setBackgroundResource(R.drawable.buttonshape_yellow);
-        else
+        else {
             btn_tmp.setBackgroundResource(R.drawable.buttonshape_brown2);
+        }
     }
 
     public boolean positionInRange( int row,int column,Field[][] battleField) {
@@ -47,11 +53,15 @@ public class Soldier implements Figures {
             return false;
     }
 
-    public boolean isEnemyInRange( int row,int column,Field[][] battleField) {      //it is not searching for enemy!
+
+
+    public boolean isEnemyInRange( int row,int column,Field[][] battleField, Soldier[] allSoldiers) {
         int colDiff = column - this.position_col;
         int rowDiff = row - this.position_row;
 
-        if (abs(colDiff) == 1 && abs(rowDiff) == 1) {
+        if (column<=7&&column>=0&&row<=7&&row>=0&&(abs(colDiff) == 1 && abs(rowDiff) == 1)&&(battleField[row][column].soldierNumber!=0)
+                &&(((allSoldiers[battleField[row][column].soldierNumber-2].isWhite)&&!this.isWhite)
+                ||((!allSoldiers[battleField[row][column].soldierNumber-2].isWhite)&&this.isWhite))) {
             return true;
         } else
             return false;
@@ -68,35 +78,39 @@ public class Soldier implements Figures {
         int row = rowDiff * 2;
 
         int[][] placesFull = new int[0][2];
-        int[][] place = {{row+this.position_row, col+this.position_col}};
 
-        if(battlefield[row+this.position_row][col+this.position_col].isFree)
-        return place;
+
+
+        if(((row+this.position_row)<=7)&&((row+this.position_row)>=0)
+                &&((col+this.position_col)<=7)&&((col+this.position_col)>=0)
+                &&battlefield[row+this.position_row][col+this.position_col].isFree){
+            int[][] place = {{row+this.position_row, col+this.position_col}};
+            return place;
+        }
         else
             return placesFull;
     }
 
 
-    public int[][] checkForAttackOpportunity(Field[][] battlefield) {
-        int counter = 0;
-        int[][] places = new int[4][2];
+
+    public int[][] checkForAttackOpportunity(Field[][] battlefield,Soldier[] allSoldier) {
+        List<Integer[]> potentialPositions = new ArrayList<>();
         for (int i = -1; i <= 1; i += 2) {
             for (int j = -1; j <= 1; j += 2) {
-                if (this.isEnemyInRange( this.position_row + i,this.position_col + j, battlefield)) {
+                if (this.isEnemyInRange( this.position_row + i,this.position_col + j, battlefield,allSoldier)) {
                     int[][] activePlace = placeAfterAttack(this.position_row+i,this.position_col+j, battlefield);
                     if (activePlace.length>0&&battlefield[activePlace[0][0]][activePlace[0][1]].isFree) {
-                        places[counter][0] = activePlace[0][0];
-                        places[counter][1] = activePlace[0][1];
-                        counter++;
+                        Integer[] tempArray = {this.position_row+i, this.position_col+j};
+                        potentialPositions.add(tempArray);
                     }
                 }
             }
         }
-        int[][] compressedPlaces = new int[counter][2];
-        for(int i =0; i<counter; i++)
+        int[][] compressedPlaces = new int[potentialPositions.size()][2];
+        for(int i =0; i<potentialPositions.size(); i++)
         {
-            compressedPlaces[i][0]=places[i][0];
-            compressedPlaces[i][1]=places[i][0];
+            compressedPlaces[i][0]=potentialPositions.get(i)[0];
+            compressedPlaces[i][1]=potentialPositions.get(i)[1];
         }
         return compressedPlaces;
     }

@@ -2,6 +2,9 @@ package com.example.tomek.warcaby;
 
 import android.widget.Button;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static java.lang.StrictMath.abs;
 
 public class GrandSoldier extends Soldier implements Figures {
@@ -12,6 +15,7 @@ public class GrandSoldier extends Soldier implements Figures {
         this.id=id;
         this.position_col=position_col;
         this.position_row=position_row;
+        this.isAlive=true;
     }
 
     @Override
@@ -26,7 +30,7 @@ public class GrandSoldier extends Soldier implements Figures {
         int colDiff = column - super.position_col;
         int rowDiff = row - super.position_row;
 
-        if ((abs(colDiff) == abs(rowDiff))&&nonCollisionCheck(column, row, battleField))
+        if ((abs(colDiff) == abs(rowDiff))&&nonCollisionCheck( row,column, battleField))
             return true;
         else
             return false;
@@ -45,14 +49,21 @@ public class GrandSoldier extends Soldier implements Figures {
             tmpRowOriginal+=Integer.signum(rowDiff);
             if(tmpColumnOriginal==columnTarget)
                 return true;
-            if(!battleField[tmpRowOriginal][tmpColumnOriginal].isFree)
+            if(!battleField[tmpRowOriginal][tmpColumnOriginal].isFree)      //tutaj sie psuje
                 return false;
         }
 
     }
 
-    public boolean isEnemyInRange( int row,int column,Field[][] battleField) {
-        return positionInRange(row,column, battleField);
+    public boolean isEnemyInRange( int row,int column,Field[][] battleField, Soldier[] allSoldiers) {
+        if (column<=7&&column>=0&&row<=7&&row>=0&&
+                positionInRange(row,column, battleField)&& (battleField[row][column].soldierNumber!=0)
+                &&(((allSoldiers[battleField[row][column].soldierNumber-2].isWhite)&&!this.isWhite)
+                ||((!allSoldiers[battleField[row][column].soldierNumber-2].isWhite)&&this.isWhite))) {
+            return true;
+        }
+        else
+            return false;
     }
 
     public int[][] placeAfterAttack( int rowOriginal,int columnOriginal, Field[][] battlefield) {
@@ -86,5 +97,29 @@ public class GrandSoldier extends Soldier implements Figures {
             placesCompressed[rows][1]=places[rows][1];
         }
         return placesCompressed;
+    }
+
+    public int[][] checkForAttackOpportunity(Field[][] battlefield,Soldier[] allSoldier) {
+        List<Integer[]> potentialPositions = new ArrayList<>();
+        for (int i = -1; i <= 1; i += 2) {
+            for (int j = -1; j <= 1; j += 2) {
+                for(int multiple=1; multiple<7;multiple++) {
+                    if (this.isEnemyInRange(this.position_row + i*multiple, this.position_col + j*multiple, battlefield, allSoldier)) {
+                        int[][] activePlace = placeAfterAttack(this.position_row + i*multiple, this.position_col + j*multiple, battlefield);
+                        if (activePlace.length > 0 && battlefield[activePlace[0][0]][activePlace[0][1]].isFree) {
+                            Integer[] tempArray = {this.position_row + i*multiple, this.position_col + j*multiple};
+                            potentialPositions.add(tempArray);
+                        }
+                    }
+                }
+            }
+        }
+        int[][] compressedPlaces = new int[potentialPositions.size()][2];
+        for(int i =0; i<potentialPositions.size(); i++)
+        {
+            compressedPlaces[i][0]=potentialPositions.get(i)[0];
+            compressedPlaces[i][1]=potentialPositions.get(i)[1];
+        }
+        return compressedPlaces;
     }
 }

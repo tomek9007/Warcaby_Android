@@ -1,5 +1,8 @@
 package com.example.tomek.warcaby;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Field {
     public boolean isFree;
     public boolean isBrown;
